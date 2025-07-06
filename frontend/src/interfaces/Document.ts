@@ -1,8 +1,8 @@
 export interface Document {
-  reminder: string;
-  owner:string;
   id: number;
   name: string;
+  owner: string;
   expiryDate: string;
   mobile: string;
+  reminder: number;
 }

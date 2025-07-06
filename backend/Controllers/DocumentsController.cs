@@ -12,9 +12,11 @@ namespace backend.Controllers
             new Document
             {
                 Id = 999,
-                Name = "Test Passport",
+                Name = "Passport",
+                Owner = "Niyas",
                 ExpiryDate = DateTime.UtcNow.AddDays(1),
-                Mobile = "+918220229994"
+                Mobile = "+919745863774",
+                Reminder = 1
             }
         };
 
@@ -34,14 +36,28 @@ namespace backend.Controllers
             return CreatedAtAction(nameof(Get), new { id = doc.Id }, doc);
         }
 
+        [HttpPut("{id}")]
+        public IActionResult Put(int id, Document updatedDoc)
+        {
+            var existing = documents.FirstOrDefault(d => d.Id == id);
+            if (existing == null)
+                return NotFound();
+
+            existing.Name = updatedDoc.Name;
+            existing.Owner = updatedDoc.Owner;
+            existing.ExpiryDate = updatedDoc.ExpiryDate;
+            existing.Mobile = updatedDoc.Mobile;
+            existing.Reminder = updatedDoc.Reminder;
+
+            return NoContent();
+        }
+
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
             var doc = documents.FirstOrDefault(d => d.Id == id);
             if (doc == null)
-            {
                 return NotFound();
-            }
 
             documents.Remove(doc);
             return NoContent();

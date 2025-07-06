@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import {
   ModalBackdrop,
@@ -14,15 +14,31 @@ import {
   Button
 } from "./DocumentForm.styles";
 
+interface Document {
+  id: number;
+  name: string;
+  owner: string;
+  expiryDate: string;
+  mobile: string;
+  reminder: number;
+}
+
 interface Props {
   onAdd: () => void;
   search: string;
   setSearch: (s: string) => void;
+  editingDoc: Document | null;
+  setEditingDoc: (doc: Document | null) => void;
 }
 
-const DocumentForm: React.FC<Props> = ({ onAdd, search, setSearch }) => {
+const DocumentForm: React.FC<Props> = ({
+  onAdd,
+  search,
+  setSearch,
+  editingDoc,
+  setEditingDoc
+}) => {
   const [showForm, setShowForm] = useState(false);
-
   const [docType, setDocType] = useState("");
   const [customDoc, setCustomDoc] = useState("");
   const [owner, setOwner] = useState("");
@@ -31,19 +47,66 @@ const DocumentForm: React.FC<Props> = ({ onAdd, search, setSearch }) => {
   const [countryCode, setCountryCode] = useState("+91");
   const [reminder, setReminder] = useState("30");
 
+  useEffect(() => {
+    if (editingDoc) {
+      setShowForm(true);
+
+      const isStandard = ["Passport", "Visa", "Marksheets", "PAN", "Certificates"];
+      if (isStandard.includes(editingDoc.name)) {
+        setDocType(editingDoc.name);
+        setCustomDoc("");
+      } else {
+        setDocType("Other");
+        setCustomDoc(editingDoc.name);
+      }
+
+      setOwner(editingDoc.owner);
+      setExpiry(editingDoc.expiryDate.slice(0, 10));
+
+      const match = editingDoc.mobile.match(/^(\+\d{1,4})(\d{6,})$/);
+      if (match) {
+        setCountryCode(match[1]);
+        setMobile(match[2]);
+      } else {
+        setCountryCode("+91");
+        setMobile(editingDoc.mobile);
+      }
+
+      setReminder(String(editingDoc.reminder));
+    }
+  }, [editingDoc]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const documentName = docType === "Other" ? customDoc : docType;
-
-    await axios.post("http://localhost:5133/api/documents", {
+    const payload = {
       name: documentName,
       owner,
       expiryDate: expiry,
       mobile: countryCode + mobile,
       reminder: parseInt(reminder),
-    });
+    };
 
+    try {
+      if (editingDoc) {
+        await axios.put(`http://localhost:5133/api/documents/${editingDoc.id}`, {
+          ...payload,
+          id: editingDoc.id
+        });
+      } else {
+        await axios.post("http://localhost:5133/api/documents", payload);
+      }
+
+      resetForm();
+      onAdd();
+    } catch (err) {
+      console.error("❌ Submit error:", err);
+      alert("Error submitting. See console for details.");
+    }
+  };
+
+  const resetForm = () => {
     setDocType("");
     setCustomDoc("");
     setOwner("");
@@ -51,7 +114,7 @@ const DocumentForm: React.FC<Props> = ({ onAdd, search, setSearch }) => {
     setMobile("");
     setReminder("30");
     setShowForm(false);
-    onAdd();
+    setEditingDoc(null);
   };
 
   return (
@@ -67,12 +130,13 @@ const DocumentForm: React.FC<Props> = ({ onAdd, search, setSearch }) => {
           Add Document
         </Button>
       </div>
+
       {showForm && (
         <ModalBackdrop>
           <ModalContent>
             <ModalHeader>
-              <h2>Add Document</h2>
-              <CloseButton onClick={() => setShowForm(false)}>✖</CloseButton>
+              <h2>{editingDoc ? "Edit Document" : "Add Document"}</h2>
+              <CloseButton onClick={resetForm}>✖</CloseButton>
             </ModalHeader>
 
             <Form onSubmit={handleSubmit}>
@@ -142,7 +206,9 @@ const DocumentForm: React.FC<Props> = ({ onAdd, search, setSearch }) => {
                 <option value="1">Reminder: 1 day before</option>
               </Select>
 
-              <Button type="submit">Submit Document</Button>
+              <Button type="submit">
+                {editingDoc ? "Update" : "Submit"} Document
+              </Button>
             </Form>
           </ModalContent>
         </ModalBackdrop>

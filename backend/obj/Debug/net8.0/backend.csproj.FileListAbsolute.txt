@@ -1,4 +1,3 @@
-C:\Git Projects\Document-expiry-Dashboard\backend\bin\Debug\net8.0\appsettings.Development.json
 C:\Git Projects\Document-expiry-Dashboard\backend\bin\Debug\net8.0\appsettings.json
 C:\Git Projects\Document-expiry-Dashboard\backend\bin\Debug\net8.0\backend.exe
 C:\Git Projects\Document-expiry-Dashboard\backend\bin\Debug\net8.0\backend.deps.json

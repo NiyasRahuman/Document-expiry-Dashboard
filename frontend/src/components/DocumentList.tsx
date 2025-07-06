@@ -1,6 +1,6 @@
 import React from "react";
 import axios from "axios";
-import { FaWhatsapp } from "react-icons/fa";
+import { FaWhatsapp, FaPen } from "react-icons/fa";
 import { Document } from "../interfaces/Document";
 import { Table, Td, Tr } from "./DocumentList.styles";
 import { styled } from "styled-components";
@@ -31,6 +31,7 @@ interface Props {
   documents: Document[];
   onDelete: (id: number) => void;
   search: string;
+  setEditingDoc: (doc: Document) => void; // ✅ Added here
 }
 
 const Th = styled.th`
@@ -40,14 +41,14 @@ const Th = styled.th`
   border-bottom: 2px solid #ccc;
 `;
 
-const DocumentList: React.FC<Props> = ({ documents, onDelete, search }) => {
+const DocumentList: React.FC<Props> = ({ documents, onDelete, search, setEditingDoc }) => {
   const handleDelete = async (id: number) => {
     if (window.confirm("Are you sure you want to delete this document?")) {
       await axios.delete(`http://localhost:5133/api/documents/${id}`);
       onDelete(id);
     }
   };
-  
+
   const filteredDocuments = documents.filter(doc =>
     [doc.name, doc.owner, doc.expiryDate, doc.reminder, doc.mobile]
       .join(" ")
@@ -80,8 +81,7 @@ const DocumentList: React.FC<Props> = ({ documents, onDelete, search }) => {
               <Td>{highlight(new Date(doc.expiryDate).toLocaleDateString(), search)}</Td>
               <Td>
                 {Math.ceil(
-                  (new Date(doc.expiryDate).getTime() - Date.now()) /
-                  (1000 * 60 * 60 * 24)
+                  (new Date(doc.expiryDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
                 )}
               </Td>
               <Td>
@@ -103,6 +103,21 @@ const DocumentList: React.FC<Props> = ({ documents, onDelete, search }) => {
                 <FaWhatsapp style={{ color: "#25D366", marginLeft: "8px" }} />
               </Td>
               <Td>
+                <button
+                  style={{
+                    backgroundColor: "orange",
+                    color: "white",
+                    border: "none",
+                    padding: "6px 10px",
+                    borderRadius: "4px",
+                    marginRight: "8px",
+                    cursor: "pointer",
+                  }}
+                  onClick={() => setEditingDoc(doc)}
+                  title="Edit"
+                >
+                  <FaPen />
+                </button>
                 <button
                   style={{
                     backgroundColor: "red",
